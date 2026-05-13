@@ -85,7 +85,7 @@ export default function App() {
     setLoading(true); setError(""); setResult(null);
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      const model = "gemini-2.0-flash";
+      const model = "gemini-1.5-flash";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
       let systemPrompt, userParts;
@@ -117,7 +117,7 @@ export default function App() {
       const raw = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
       setResult(JSON.parse(raw));
     } catch (e) {
-      setError("분석 중 오류가 발생했습니다. 다시 시도해주세요.");
+      setError(`오류: ${e.message}`);
     } finally {
       setLoading(false);
     }
