@@ -84,28 +84,37 @@ export default function App() {
     if (mode === 2 && !imgData) return;
     setLoading(true); setError(""); setResult(null);
     try {
-      let sys, msgs;
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const model = "gemini-2.0-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      let systemPrompt, userParts;
       if (mode === 0) {
-        sys = SYSTEM_KO_JP;
-        msgs = [{ role: "user", content: text.trim() }];
+        systemPrompt = SYSTEM_KO_JP;
+        userParts = [{ text: text.trim() }];
       } else if (mode === 1) {
-        sys = SYSTEM_JP_KO;
-        msgs = [{ role: "user", content: text.trim() }];
+        systemPrompt = SYSTEM_JP_KO;
+        userParts = [{ text: text.trim() }];
       } else {
-        sys = SYSTEM_PHOTO;
-        msgs = [{ role: "user", content: [
-          { type: "image", source: { type: "base64", media_type: imgData.type, data: imgData.base64 } },
-          { type: "text", text: "이 이미지의 일본어를 분석해주세요." },
-        ]}];
+        systemPrompt = SYSTEM_PHOTO;
+        userParts = [
+          { inline_data: { mime_type: imgData.type, data: imgData.base64 } },
+          { text: "이 이미지의 일본어를 분석해주세요." },
+        ];
       }
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1500, system: sys, messages: msgs }),
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: "user", parts: userParts }],
+          generationConfig: { maxOutputTokens: 1500 },
+        }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
-      const raw = data.content[0].text.replace(/```json|```/g, "").trim();
+      const raw = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
       setResult(JSON.parse(raw));
     } catch (e) {
       setError("분석 중 오류가 발생했습니다. 다시 시도해주세요.");
