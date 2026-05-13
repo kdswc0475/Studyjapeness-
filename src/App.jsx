@@ -42,6 +42,27 @@ const TYPE_STYLE = {
   감탄사: { bg: "#F0EEF8", color: "#4a3080" },
 };
 
+function FuriganaText({ parts }) {
+  if (!parts || parts.length === 0) return null;
+  return (
+    <span style={{ lineHeight: 2.2 }}>
+      {parts.map((p, i) => {
+        const hasKanji = /[一-龯]/.test(p.word);
+        return hasKanji && p.reading ? (
+          <ruby key={i} style={{ rubyAlign: "center" }}>
+            {p.word}
+            <rt style={{ fontSize: "0.45em", color: "#888", fontWeight: 400, letterSpacing: "0.05em" }}>
+              {p.reading}
+            </rt>
+          </ruby>
+        ) : (
+          <span key={i}>{p.word}</span>
+        );
+      })}
+    </span>
+  );
+}
+
 function badge(type) {
   const s = TYPE_STYLE[type] || { bg: "#F0F0EE", color: "#555" };
   return (
@@ -281,8 +302,8 @@ export default function App() {
             <div style={{ background: "#fff", border: "1px solid #E5E5E3", borderRadius: 14, overflow: "hidden" }}>
 
               <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid #F2F2F0" }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#111", letterSpacing: "0.03em", marginBottom: 8, lineHeight: 1.4 }}>
-                  {result.japanese}
+                <div style={{ fontSize: 24, fontWeight: 700, color: "#111", letterSpacing: "0.03em", marginBottom: 8 }}>
+                  {result.parts?.length ? <FuriganaText parts={result.parts} /> : result.japanese}
                 </div>
                 <div style={{ fontSize: 13, color: "#ABABAB", marginBottom: 6, fontStyle: "italic" }}>
                   [{result.pronunciation}]
